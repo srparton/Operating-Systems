@@ -4,7 +4,7 @@
 #include <time.h>
 #include <stdbool.h>
 
-struct process{
+typedef struct process{
   int ID;
   int priority;
   int arrivalTime;
@@ -14,7 +14,7 @@ struct process{
   int startTime;
   int waitTime;
   bool finished;
-};
+}process;
 
 void FCFS(struct process *processArray, struct process *resultArray, int length){
   int finished = 0; //keeps track of the amount of process completed
@@ -49,8 +49,10 @@ void FCFS(struct process *processArray, struct process *resultArray, int length)
 
 void setprocess(struct process *input, int length, int maxRand){
   int i = 0;
+  printf("please");
   while(i < length){
     input[i].ID = i;
+    printf("input[i].ID %d\n", i);
     input[i].priority = (rand() % maxRand);
     input[i].arrivalTime = (rand() % maxRand);
     input[i].burstTime = (rand() % maxRand);
@@ -65,13 +67,13 @@ int main(){
   srand(time(0)); //seed with time for random results everytime
 
   int maxRand = 20;
-  int arrayLength = 10; //needs to come from input
+  int arrayLength; //needs to come from input
   int i = 0;
-
   float avgWait;
-
-  struct process processArray[arrayLength];
-  struct process FCFSArray[arrayLength];
+  printf("How many process would you like: ");
+  scanf("%d", &arrayLength);
+  process *processArray = malloc(arrayLength * sizeof(process));
+  process *FCFSArray = malloc(arrayLength * sizeof(process));
 
   setprocess(processArray, arrayLength, maxRand);
   printf("Entered Info\n");
@@ -102,5 +104,7 @@ int main(){
   avgWait = avgWait/arrayLength;
 
   printf("AVG wait time for FCFS (first come first serve) = %f\n", avgWait);
+  free(processArray);
+  free(FCFSArray);
   return 0;
 }
