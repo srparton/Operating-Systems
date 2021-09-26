@@ -58,14 +58,15 @@ void FCFS(struct process *processArray, struct process *resultArray, int length)
 void SJF(struct process *processArray, struct process *resultArray, int length){
   process *qArray = malloc(length * sizeof(process));
   int q = 0; //tracks the amont of process queued
+  bool qFound = false;
 
   int finished = 0; //keeps track of the amount of process completed
   int lowestTime = ((unsigned int)~0 >> 1); //lowest burst time
   int location;
-  int totalTime = 0;
-  bool processFound = false;
+  int totalTime = 0; //time that has passed
+  bool processFound = false; //finds the next process to run
   int i = 0;
-  int x = ((unsigned int)~0 >> 1);
+  int x = ((unsigned int)~0 >> 1); //the l
   /*
     this first loop finds the first job to arrival an executes it first
     then the block after that is setting all the values for that
@@ -73,39 +74,52 @@ void SJF(struct process *processArray, struct process *resultArray, int length){
 
   */
   while(i < length){
-    if(processArray[i].arrivalTime < x){
+    if(processArray[i].arrivalTime < lowestTime){
       location = i;
-      x = processArray[i].arrivalTime;
+      lowestTime = processArray[i].arrivalTime;
     }
     i++;
   }
-  qArray[q++] = processArray[location];
-  resultArray[finished] = qArray[0];
+  lowestTime = ((unsigned int)~0 >> 1);
+  /*////////////////////////////////////////////////////
+  these are all the calues for the first processed that is finished
+
+  processArray[location].finished = true;
+  processArray[location].queued = true;
+  these two lines ensure that no duplicates are added into the qArray
+  without these you get unexpected results
+
+  ////////////////////////////////////////////////////*/
+  resultArray[finished] = processArray[location];
   resultArray[finished].startTime = resultArray[finished].arrivalTime;
   resultArray[finished].completionTime = resultArray[finished].startTime + resultArray[finished].burstTime;
   resultArray[finished].waitTime = resultArray[finished].startTime - resultArray[finished].arrivalTime; // should always be 0
   resultArray[finished].TAT = resultArray[finished].completionTime - resultArray[finished].arrivalTime; //should be = to BT
   resultArray[finished].finished = true;
   resultArray[finished].queued = true;
+  processArray[location].finished = true;
+  processArray[location].queued = true;
+  totalTime = resultArray[finished].completionTime;
   finished++;
 
-  totalTime = resultArray[0].completionTime;
-  //fill the queue for the jobs added while last on ran
+
+  //fill the queue for the jobs added while last one ran
   for(i = 0; i < length; i++){
-    if(processArray[i].arrivalTime <= totalTime && !processArray[i].queued){
+    if(processArray[i].arrivalTime <= totalTime && !processArray[i].finished){
       qArray[q++] = processArray[i];
-      processFound = true;
+      processArray[i].queued = true;
     }
   }
-  printf("q -> %d\n", q);
-  for(i=0; i< q; i++){
-    printf("ID: %d  AT: %d BT: %d \n", qArray[i].ID, qArray[i].arrivalTime, qArray[i].burstTime);
-  }
 
+  /*///////////////////////////////////////////////
+  The first while loop makes sure that all process have been completed before
+  we exit the program
+  ///////////////////////////////////////////////*/
   while(finished != length){
+    /*///////////////////////////////////
+    this for loop checks to see which process needs to be ran next
+    //////////////////////////////////*/
     for(i = 0; i < q; i++){
-      printf("q->%d\n", q);
-      printf("\n");
       if(!qArray[i].finished && qArray[i].burstTime < lowestTime){
         location = i;
         //printf("location -> %d\n", location);
@@ -113,37 +127,45 @@ void SJF(struct process *processArray, struct process *resultArray, int length){
         processFound = true;
       }
     }
+    /*///////////////////////////////////
+    adding all of the variables to result array the same way as it was done for the
+    first one
+    //////////////////////////////////*/
     if(processFound){
       qArray[location].finished = true;
       resultArray[finished] = qArray[location];
-      resultArray[finished].startTime = resultArray[finished].arrivalTime;
+      resultArray[finished].startTime = totalTime;
       resultArray[finished].completionTime = resultArray[finished].startTime + resultArray[finished].burstTime;
-      resultArray[finished].waitTime = resultArray[finished].startTime - resultArray[finished].arrivalTime;
       resultArray[finished].TAT = resultArray[finished].completionTime - resultArray[finished].arrivalTime;
-      totalTime = resultArray[finished].burstTime;
+      resultArray[finished].waitTime = resultArray[finished].TAT - resultArray[finished].burstTime;
+      totalTime = resultArray[finished].completionTime;
       finished++;
     }
+    /*///////////////////////////////////
+    if we enter this else it means that there is currently nothing
+    in the queue and we need to just increase the time till
+    something is added
+    //////////////////////////////////*/
     else{
-      totalTime += 100;
-      printf("SJF didnt find job\n\n\n\n\n\n");
-      //finished++;
+      totalTime++;
     }
-
-    //Adds any jobs not in the queue yet if they have arrived
-    //if all jobs in queue it is skipped
+    /*///////////////////////////////////
+    Adds any jobs not in the queue yet if they have arrived
+    if all jobs in queue it is skipped
+    //////////////////////////////////*/
     if(q < length){
-      //printf("adding\n");
       for(i = 0; i < length; i++){
-        if(processArray[i].arrivalTime <= totalTime && (!processArray[i].queued || !processArray[i].finished)){
-          //printf("added %d\n",i);
+        if(processArray[i].arrivalTime <= totalTime && !processArray[i].queued ){
           qArray[q++] = processArray[i];
+          processArray[i].queued =  true;
         }
       }
     }
+    //reset these variable before restarting the while loop
     lowestTime = ((unsigned int)~0 >> 1);
     processFound = false;
   }
-  //free(qArray);
+  free(qArray);
 }
 
 void setprocess(struct process *input, int length, int maxRand){
@@ -168,12 +190,25 @@ void resetProcess(struct process *input, int length){
 
 int main(){
   srand(time(0)); //seed with time for random results everytime
-  int maxRand = 20;
+  int maxRand = 20; // could get this from user input
   int arrayLength; //needs to come from input
   int i = 0;
   float avgWait;
+
+  /*//////////////////////////////////
+  gets the user input for the amount of process to run
+  //////////////////////////////////*/
   printf("How many process would you like: ");
   scanf("%d", &arrayLength);
+
+  /*///////////////////////////////////////////////////////////
+  processArray holds all the base information about Process
+
+  Each specific array for the scheduling algorithims holds
+  the results of the algorithm in the order in which they would run
+
+  all must be free before main is finished
+  //////////////////////////////////////////////////////////*/
   process *processArray = malloc(arrayLength * sizeof(process));
   process *FCFSArray = malloc(arrayLength * sizeof(process));
   process *SJFArray = malloc(arrayLength * sizeof(process));
@@ -210,11 +245,14 @@ int main(){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SJF
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  //reset process must be ran before calling any new scheduling algotithm
+  //just sets finished and queued back to false
   resetProcess(processArray, arrayLength);
-  /*SJF(processArray, SJFArray, arrayLength);
+  SJF(processArray, SJFArray, arrayLength);
   printf("SJF results\n");
   while(i < arrayLength){
-    printf("ID: %d st: %d priority: %d AT: %d BT: %d CT: %d TAT: %d\n", SJFArray[i].ID, SJFArray[i].startTime, SJFArray[i].priority, SJFArray[i].arrivalTime, SJFArray[i].burstTime, SJFArray[i].completionTime, SJFArray[i].TAT);
+    printf("ID: %d st: %d priority: %d AT: %d BT: %d CT: %d TAT: %d WT: %d\n", SJFArray[i].ID, SJFArray[i].startTime, SJFArray[i].priority, SJFArray[i].arrivalTime, SJFArray[i].burstTime, SJFArray[i].completionTime, SJFArray[i].TAT, SJFArray[i].waitTime);
     i++;
   }
   i = 0;
@@ -225,8 +263,11 @@ int main(){
 
   i=0;
   avgWait = avgWait/arrayLength;
+  printf("AVG wait time for SJF (Shortest Job First) = %f\n", avgWait);
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+// SJF
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  printf("AVG wait time for SJF (Shortest Job First) = %f\n", avgWait);*/
   free(SJFArray);
   free(processArray);
   free(FCFSArray);
