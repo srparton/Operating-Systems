@@ -463,11 +463,11 @@ int main(){
   avgWait = avgWait/arrayLength;
   printf("AVG wait time for priorityArray = %f\n", avgWait);
   printf("gantt chart\n");
-  ganttNP(gantArray, gantLength); //dont comment out 
+  ganttNP(gantArray, gantLength);
   free(SJFArray);
   free(processArray);
   free(FCFSArray);
   free(priorityArray);
-  free(gantArray);
+  //free(gantArray); // problems 
   return 0;
 }
