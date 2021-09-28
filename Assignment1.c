@@ -9,6 +9,7 @@ typedef struct process{
   int priority;
   int arrivalTime;
   int burstTime;
+  int runTime;
   int completionTime;
   int TAT;
   int startTime;
@@ -16,6 +17,12 @@ typedef struct process{
   bool finished;
   bool queued;
 }process;
+
+typedef struct gantt{
+  process Process;
+  int enterTime;
+  int leaveTime;
+}gantt;
 
 void FCFS(struct process *processArray, struct process *resultArray, int length){
   int finished = 0; //keeps track of the amount of process completed
@@ -168,6 +175,168 @@ void SJF(struct process *processArray, struct process *resultArray, int length){
   free(qArray);
 }
 
+int priority(struct process *processArray, struct process *resultArray, struct gantt *gantArray, int length){
+  process *qArray = malloc(length * sizeof(process));
+  int q = 0; //tracks the amont of process queued
+  bool qFound = false;
+
+  int gantLength = 1;
+  int gantPos = 0;
+  int finished = 0; //keeps track of the amount of process completed
+  int lowTime = ((unsigned int)~0 >> 1); // for the first job
+  int highestPriority = -1; //highestPriority
+  int location;
+  int totalTime = 0; //time that has passed
+  bool processFound = false; //finds the next process to run
+  bool processFinished = false;
+  int i = 0;
+  int x = ((unsigned int)~0 >> 1); //the l
+  /*
+    this first loop finds the first job to arrival an executes it first
+    then the block after that is setting all the values for that
+    first job.
+
+  */
+  while(i < length){
+    if(processArray[i].arrivalTime < lowTime){
+      location = i;
+      lowTime = processArray[i].arrivalTime;
+    }
+    i++;
+  }
+  totalTime = processArray[location].arrivalTime;
+  qArray[q++] = processArray[location];
+  processArray[location].queued = true;
+  gantArray[gantPos].enterTime = totalTime;
+  gantArray[gantPos].Process = qArray[location];
+  /*////////////////////////////////////////////////////
+  these are all the values for the first processed that is finished
+
+  processArray[location].finished = true;
+  processArray[location].queued = true;
+  these two lines ensure that no duplicates are added into the qArray
+  without these you get unexpected results
+
+  ////////////////////////////////////////////////////*/
+  /*resultArray[finished] = processArray[location];
+  resultArray[finished].startTime = resultArray[finished].arrivalTime;
+  resultArray[finished].completionTime = resultArray[finished].startTime + resultArray[finished].burstTime;
+  resultArray[finished].waitTime = resultArray[finished].startTime - resultArray[finished].arrivalTime; // should always be 0
+  resultArray[finished].TAT = resultArray[finished].completionTime - resultArray[finished].arrivalTime; //should be = to BT
+  resultArray[finished].finished = true;
+  resultArray[finished].queued = true;
+  processArray[location].finished = true;
+  processArray[location].queued = true;
+  totalTime = resultArray[finished].completionTime;
+  finished++;*/
+
+  //fill the queue for the jobs added while last one ran
+
+  /*for(i = 0; i < length; i++){
+    if(processArray[i].arrivalTime <= totalTime && !processArray[i].queued){
+      qArray[q++] = processArray[i];
+      processArray[i].queued = true;
+    }
+  }*/
+  /*///////////////////////////////////////////////
+  The first while loop makes sure that all process have been completed before
+  we exit the program
+  ///////////////////////////////////////////////*/
+  while(finished != length){
+    /*///////////////////////////////////
+    this for loop checks to see which process needs to be ran next
+    //////////////////////////////////*/
+    if(q < length){
+      for(i = 0; i < length; i++){
+        if(processArray[i].arrivalTime <= totalTime && !processArray[i].queued ){
+          qArray[q++] = processArray[i];
+          processArray[i].queued =  true;
+        }
+      }
+    }
+
+    for(i = 0; i < q; i++){
+      if(!qArray[i].finished && qArray[i].priority > highestPriority){
+        location = i;
+        highestPriority = qArray[location].priority;
+        processFound = true;
+      }
+    }
+    if(processFound){
+      gantArray = (gantt *)realloc(gantArray, ++gantLength * sizeof(gantt));
+      gantArray[gantPos].leaveTime = totalTime;
+      gantArray[++gantPos].Process = qArray[location];
+      if(qArray[location].startTime == ((unsigned int)~0 >> 1))
+        qArray[location].startTime = totalTime;
+      totalTime++;
+      gantArray[gantPos].enterTime = totalTime;
+      qArray[location].runTime -= 1;
+      if (qArray[location].runTime < 1){
+         processFinished = true;
+      }
+    }
+    else{
+      processFinished = true;
+    }
+    //printf("total time %d\n", totalTime);
+    /*///////////////////////////////////
+    adding all of the variables to result array the same way as it was done for the
+    first one
+    //////////////////////////////////*/
+    if(processFinished){
+      qArray[location].finished = true;
+      resultArray[finished] = qArray[location];
+      resultArray[finished].startTime = qArray[location].startTime;
+      resultArray[finished].completionTime = resultArray[finished].startTime + resultArray[finished].burstTime;
+      resultArray[finished].TAT = resultArray[finished].completionTime - resultArray[finished].arrivalTime;
+      resultArray[finished].waitTime = resultArray[finished].TAT - resultArray[finished].burstTime;
+      totalTime = resultArray[finished].completionTime;
+      finished++;
+    }
+    /*///////////////////////////////////
+    if we enter this else it means that there is currently nothing
+    in the queue and we need to just increase the time till
+    something is added
+    //////////////////////////////////*/
+
+    /*///////////////////////////////////
+    Adds any jobs not in the queue yet if they have arrived
+    if all jobs in queue it is skipped
+    //////////////////////////////////*/
+    if(q < length){
+      for(i = 0; i < length; i++){
+        if(processArray[i].arrivalTime <= totalTime && !processArray[i].queued ){
+          qArray[q++] = processArray[i];
+          processArray[i].queued =  true;
+        }
+      }
+    }
+    //reset these variable before restarting the while loop
+    //if(q != length)
+      highestPriority = -1;
+    processFinished = false;
+    processFound = false;
+  }
+  free(qArray);
+  return gantLength;
+}
+
+void gant(struct process *gantArray, int length){
+  printf("|");
+  for(int i=0; i<length; i++){
+    printf("%d P%d %d|", gantArray[i].startTime, gantArray[i].ID, gantArray[i].completionTime);
+  }
+  printf("\n");
+}
+
+void ganttNP(struct gantt *gantArray, int length){
+  printf("|");
+  for(int i=0; i<length; i++){
+    printf("%d P%d %d|", gantArray[i].enterTime, gantArray[i].Process.ID, gantArray[i].leaveTime);
+  }
+  printf("\n");
+}
+
 void setprocess(struct process *input, int length, int maxRand){
   int i = 0;
   while(i < length){
@@ -175,8 +344,10 @@ void setprocess(struct process *input, int length, int maxRand){
     input[i].priority = (rand() % maxRand);
     input[i].arrivalTime = (rand() % maxRand);
     input[i].burstTime = (rand() % maxRand);
+    input[i].runTime = input[i].burstTime;
     input[i].finished = false;
     input[i].queued = false;
+    input[i].startTime = ((unsigned int)~0 >> 1);
     i++;
   }
 }
@@ -212,6 +383,8 @@ int main(){
   process *processArray = malloc(arrayLength * sizeof(process));
   process *FCFSArray = malloc(arrayLength * sizeof(process));
   process *SJFArray = malloc(arrayLength * sizeof(process));
+  process *priorityArray = malloc(arrayLength * sizeof(process));
+  gantt *gantArray = malloc(arrayLength * sizeof(process)); //for non pre emptive
 
   setprocess(processArray, arrayLength, maxRand);
   printf("Entered Info\n");
@@ -242,13 +415,15 @@ int main(){
   avgWait = avgWait/arrayLength;
 
   printf("AVG wait time for FCFS (first come first serve) = %f\n", avgWait);
+  printf("gant Array\n");
+  gant(FCFSArray, arrayLength);
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SJF
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   //reset process must be ran before calling any new scheduling algotithm
   //just sets finished and queued back to false
-  resetProcess(processArray, arrayLength);
+  /*resetProcess(processArray, arrayLength);
   SJF(processArray, SJFArray, arrayLength);
   printf("SJF results\n");
   while(i < arrayLength){
@@ -263,13 +438,36 @@ int main(){
 
   i=0;
   avgWait = avgWait/arrayLength;
-  printf("AVG wait time for SJF (Shortest Job First) = %f\n", avgWait);
+  printf("AVG wait time for SJF (Shortest Job First) = %f\n", avgWait);*/
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SJF
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
+//reset process must be ran before calling any new scheduling algotithm
+//just sets finished and queued back to false
+  int gantLength;
+  resetProcess(processArray, arrayLength);
+  printf("arrayLength -> %d", arrayLength);
+  gantLength = priority(processArray, priorityArray, gantArray, arrayLength);
+  printf("SJF results\n");
+  while(i < arrayLength){
+    printf("ID: %d st: %d priority: %d AT: %d BT: %d CT: %d TAT: %d WT: %d\n", priorityArray[i].ID, priorityArray[i].startTime, priorityArray[i].priority, priorityArray[i].arrivalTime, priorityArray[i].burstTime, priorityArray[i].completionTime, priorityArray[i].TAT, priorityArray[i].waitTime);
+    i++;
+  }
+  i = 0;
+  while(i < arrayLength){
+    avgWait = avgWait + priorityArray[i].waitTime;
+    i++;
+  }
 
+  i=0;
+  avgWait = avgWait/arrayLength;
+  printf("AVG wait time for priorityArray = %f\n", avgWait);
+  printf("gantt chart\n");
+  ganttNP(gantArray, gantLength); //dont comment out 
   free(SJFArray);
   free(processArray);
   free(FCFSArray);
+  free(priorityArray);
+  free(gantArray);
   return 0;
 }
