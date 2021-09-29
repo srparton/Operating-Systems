@@ -205,10 +205,13 @@ int priority(struct process *processArray, struct process *resultArray, struct g
     i++;
   }
   totalTime = processArray[location].arrivalTime;
-  qArray[q++] = processArray[location];
+  // printf("tT -> %d\n", totalTime);
+  qArray[q] = processArray[location];
   processArray[location].queued = true;
   gantArray[gantPos].enterTime = totalTime;
-  gantArray[gantPos].Process = qArray[q - 1];
+  gantArray[gantPos].Process = qArray[q];
+  qArray[q++].startTime = totalTime;
+  //printf("st q -> %d\n, st pa -> %d\n location -> %d \n", qArray[q -1].startTime, processArray[location].startTime), location;
   /*////////////////////////////////////////////////////
   these are all the values for the first processed that is finished
 
@@ -256,12 +259,16 @@ int priority(struct process *processArray, struct process *resultArray, struct g
       else
         processFinished = false;
     }
-    else
+    else{
+      // printf("hahhahaha\n");
+      
       processFinished = false;
+    }
+    // printf("q %d finished -> %d total time -> %d\n", q, finished, totalTime);
     if(q < length){
       for(i = 0; i < length; i++){
         if(processArray[i].arrivalTime <= totalTime && !processArray[i].queued ){
-          printf("\nhere\n");
+          // printf("\nhere %d\n", i);
           qArray[q++] = processArray[i];
           processArray[i].queued =  true;
         }
@@ -286,9 +293,13 @@ int priority(struct process *processArray, struct process *resultArray, struct g
           qArray[location].startTime = totalTime;
         }
 
+
     }
     else{
-      processFinished = true;
+      if(!qArray[location].finished)
+        processFinished = true;
+      else
+        totalTime++;
     }
     //printf("total time %d\n", totalTime);
     /*///////////////////////////////////
