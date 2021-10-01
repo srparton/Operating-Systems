@@ -290,6 +290,7 @@ void SRTF(struct process *processArray, struct process *resultArray, int length)
         //here
         else{ //nothing is arrived currently so fast forward time to arrival time - 1 (for loop will increment time once more)
           time = qArray[x].arrivalTime - 1;
+          qArray[x].startTime = qArray[x].arrivalTime;
           location = x;
           //printf("no current process found. Fastforwarding to locaiton %d\n",location);
         }
