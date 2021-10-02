@@ -509,12 +509,46 @@ void resetProcess(struct process *input, int length){
   }
 }
 
+void averages(struct process *processArray, int arrayLength){
+  int i = 0;
+  int totalTime = 0;
+  float avgWait = 0;
+  float avgTAT = 0;
+  float avgRT = 0;
+  float throughput = 0;
+  while(i < arrayLength){
+    avgWait = avgWait + processArray[i].waitTime;
+    avgTAT += processArray[i].TAT;
+    avgRT += processArray[i].startTime - processArray[i].arrivalTime;
+    totalTime += processArray[i].completionTime;
+    i++;
+  }
+
+  i=0;
+  avgWait = avgWait/arrayLength;
+  avgTAT = avgTAT/arrayLength;
+  avgRT = avgRT/arrayLength;
+  throughput = totalTime/arrayLength;
+  // printf("AVG wait time for priorityArray = %f\n", avgWait);
+  // printf("gantt chart\n");
+  // ganttNP(gantArray, gantLength); //dont comment out
+  printf("AVG wait time for SRTF (Shortest Remaining Time First) = %f\n", avgWait);
+  printf("AVG turnaround time for SRTF (Shortest Remaining Time First) = %f\n", avgTAT);
+  printf("AVG response time for SRTF (Shortest Remaining Time First) = %f\n", avgRT);
+  printf("Throughput for SRTF (Shortest Remaining Time First) = %f\n", throughput);
+
+}
+
 int main(){
   srand(time(0)); //seed with time for random results everytime
   int maxRand = 20; // could get this from user input
   int arrayLength; //needs to come from input
   int i = 0;
-  float avgWait;
+  // float avgWait;
+  // float avgTAT;
+  // float avgRT;
+  // float throughput;
+  // int totalTime;
 
   /*//////////////////////////////////
   gets the user input for the amount of process to run
@@ -613,18 +647,33 @@ int main(){
     printf("ID: %d st: %d priority: %d AT: %d BT: %d CT: %d TAT: %d WT: %d\n", SRTFArray[i].ID, SRTFArray[i].startTime, SRTFArray[i].priority, SRTFArray[i].arrivalTime, SRTFArray[i].burstTime, SRTFArray[i].completionTime, SRTFArray[i].TAT, SRTFArray[i].waitTime);
     i++;
   }
-  i = 0;
-  while(i < arrayLength){
-    avgWait = avgWait + SRTFArray[i].waitTime;
-    i++;
-  }
 
-  i=0;
-  avgWait = avgWait/arrayLength;
-  // printf("AVG wait time for priorityArray = %f\n", avgWait);
-  // printf("gantt chart\n");
-  // ganttNP(gantArray, gantLength); //dont comment out
-  printf("AVG wait time for SRTF (Shortest Remaining Time First) = %f\n", avgWait);
+  averages(SRTFArray,arrayLength);
+  // i = 0;
+  // avgWait = 0;
+  // avgTAT = 0;
+  // avgRT = 0;
+  // throughput = 0;
+  // while(i < arrayLength){
+  //   avgWait = avgWait + SRTFArray[i].waitTime;
+  //   avgTAT += SRTFArray[i].TAT;
+  //   avgRT += SRTFArray[i].startTime - SRTFArray[i].arrivalTime;
+  //   totalTime += SRTFArray[i].completionTime;
+  //   i++;
+  // }
+
+  // i=0;
+  // avgWait = avgWait/arrayLength;
+  // avgTAT = avgTAT/arrayLength;
+  // avgRT = avgRT/arrayLength;
+  // throughput = totalTime/arrayLength;
+  // // printf("AVG wait time for priorityArray = %f\n", avgWait);
+  // // printf("gantt chart\n");
+  // // ganttNP(gantArray, gantLength); //dont comment out
+  // printf("AVG wait time for SRTF (Shortest Remaining Time First) = %f\n", avgWait);
+  // printf("AVG turnaround time for SRTF (Shortest Remaining Time First) = %f\n", avgTAT);
+  // printf("AVG response time for SRTF (Shortest Remaining Time First) = %f\n", avgRT);
+  // printf("Throughput for SRTF (Shortest Remaining Time First) = %f\n", throughput);
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SRTF
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
