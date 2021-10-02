@@ -10,4 +10,4 @@ Assignment1.o : Assignment1.c
 	gcc -c Assignment1.c
 
 clean :
-	rm -rf *.o Assignment1 .*sw* a.out
+	rm -rf *.o Assignment1 .*sw* a a.out
