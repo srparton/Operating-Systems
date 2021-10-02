@@ -517,10 +517,11 @@ void resetProcess(struct process *input, int length){
 /*
   Purpose: this will compute the average wait time, turn around time, response time and thoroughput 
   Input: struct process processArry and a interger defining the number of processes in the proceessArray ie the length of the array
+    and a char[] to determine what method of processes if being calculated. 
   Precondition: must pass in a struct process that has values assigned to waitTime, TAT, startTime, arrivalTime and completionTime
   Postcondition: will printout the computed averages. 
 */
-void averages(struct process *processArray, int arrayLength){
+void averages(struct process *processArray, int arrayLength, char processType[]){
   int i = 0;
   int totalTime = 0;
   float avgWait = 0;
@@ -543,11 +544,10 @@ void averages(struct process *processArray, int arrayLength){
   // printf("AVG wait time for priorityArray = %f\n", avgWait);
   // printf("gantt chart\n");
   // ganttNP(gantArray, gantLength); //dont comment out
-  printf("AVG wait time for SRTF (Shortest Remaining Time First) = %f\n", avgWait);
-  printf("AVG turnaround time for SRTF (Shortest Remaining Time First) = %f\n", avgTAT);
-  printf("AVG response time for SRTF (Shortest Remaining Time First) = %f\n", avgRT);
-  printf("Throughput for SRTF (Shortest Remaining Time First) = %f\n", throughput);
-
+  printf("AVG wait time for %s = %f\n",processType, avgWait);
+  printf("AVG turnaround time for %s = %f\n",processType, avgTAT);
+  printf("AVG response time for %s = %f\n",processType, avgRT);
+  printf("Throughput for %s = %f\n",processType,throughput);
 }
 
 int main(){
@@ -658,8 +658,8 @@ int main(){
     printf("ID: %d st: %d priority: %d AT: %d BT: %d CT: %d TAT: %d WT: %d\n", SRTFArray[i].ID, SRTFArray[i].startTime, SRTFArray[i].priority, SRTFArray[i].arrivalTime, SRTFArray[i].burstTime, SRTFArray[i].completionTime, SRTFArray[i].TAT, SRTFArray[i].waitTime);
     i++;
   }
-
-  averages(SRTFArray,arrayLength);
+char type[5] = "SRTF";
+  averages(SRTFArray,arrayLength,type);
   // i = 0;
   // avgWait = 0;
   // avgTAT = 0;
