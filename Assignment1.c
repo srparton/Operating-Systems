@@ -261,7 +261,7 @@ int priority(struct process *processArray, struct process *resultArray, struct g
     }
     else{
       // printf("hahhahaha\n");
-      
+
       processFinished = false;
     }
     // printf("q %d finished -> %d total time -> %d\n", q, finished, totalTime);
