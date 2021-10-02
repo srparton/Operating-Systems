@@ -501,7 +501,12 @@ void setprocess(struct process *input, int length, int maxRand){
     i++;
   }
 }
-
+/*
+  Purpose: will reset the process statuses for the next processing method
+  Input: struct process array and integer length that defines the length of the process array
+  Precondition: must have a process array thats not null and a length that is greater than 0
+  Postcondition: attributes of struct finished and queued are reset to false 
+*/
 void resetProcess(struct process *input, int length){
   for(int i =0; i < length; i++){
     input[i].finished = false;
@@ -509,6 +514,12 @@ void resetProcess(struct process *input, int length){
   }
 }
 
+/*
+  Purpose: this will compute the average wait time, turn around time, response time and thoroughput 
+  Input: struct process processArry and a interger defining the number of processes in the proceessArray ie the length of the array
+  Precondition: must pass in a struct process that has values assigned to waitTime, TAT, startTime, arrivalTime and completionTime
+  Postcondition: will printout the computed averages. 
+*/
 void averages(struct process *processArray, int arrayLength){
   int i = 0;
   int totalTime = 0;
