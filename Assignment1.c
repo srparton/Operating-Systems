@@ -3,7 +3,15 @@
 #include <stdlib.h>
 #include <time.h>
 #include <stdbool.h>
+/*//////////////////////////////////////////////////
+Implementations of FCFS SJF SRTF Priority and RR
+scheduling algorithims
 
+Due Date: Oct 2nd 2021
+
+Programmers: Braxton Elrod and Spencer Parton
+
+//////////////////////////////////////////////////*/
 typedef struct process{
   int ID;
   int priority;
@@ -546,6 +554,7 @@ int RR(struct process *processArray, struct process *resultArray, struct gantt *
   int totalTime = 0; //time that has passed
   bool processFound = false; //finds the next process to run
   bool processFinished = false;
+  bool moreQ = false;
   int i = 0;
   int x = ((unsigned int)~0 >> 1); //the l
   /*
@@ -584,7 +593,15 @@ int RR(struct process *processArray, struct process *resultArray, struct gantt *
       }
     }
     else{
-
+      moreQ = false;
+      for(int i=0; i < q; i++){
+        if(!qArray[i].finished){
+          moreQ = true;
+        }
+      }
+      if(!moreQ){
+        totalTime++;
+      }
       processFinished = false;
     }
     if(q < length){
@@ -779,8 +796,8 @@ void averages(struct process *processArray, int arrayLength, char processType[])
 }
 
 int main(){
-  srand(time(0)); //seed with time for random results everytime
-  int maxRand = 15; // could get this from user input
+  srand(1); //seed with time for random results everytime
+  int maxRand = 20; // could get this from user input
   int arrayLength; //needs to come from input
   int i = 0;
    float avgWait;
