@@ -14,6 +14,7 @@ typedef struct process{
   int TAT;
   int startTime;
   int waitTime;
+  int responseTime;
   bool finished;
   bool queued;
 }process;
@@ -98,7 +99,8 @@ void FCFS(struct process *processArray, struct process *resultArray, int length)
 
       resultArray[finished].completionTime = totalTime;
       resultArray[finished].TAT = resultArray[finished].completionTime - resultArray[finished].arrivalTime;
-      resultArray[finished].waitTime = resultArray[finished].startTime - resultArray[finished].arrivalTime;
+      resultArray[finished].responseTime = resultArray[finished].startTime - resultArray[finished].arrivalTime;
+      resultArray[finished].waitTime = resultArray[finished].TAT - resultArray[finished].burstTime;
       finished++;
     }
     else
@@ -157,8 +159,9 @@ void SJF(struct process *processArray, struct process *resultArray, int length){
   resultArray[finished] = processArray[location];
   resultArray[finished].startTime = resultArray[finished].arrivalTime;
   resultArray[finished].completionTime = resultArray[finished].startTime + resultArray[finished].burstTime;
-  resultArray[finished].waitTime = resultArray[finished].startTime - resultArray[finished].arrivalTime; // should always be 0
-  resultArray[finished].TAT = resultArray[finished].completionTime - resultArray[finished].arrivalTime; //should be = to BT
+  resultArray[finished].startTime = resultArray[finished].startTime - resultArray[finished].arrivalTime;
+  resultArray[finished].TAT = resultArray[finished].completionTime - resultArray[finished].arrivalTime;
+  resultArray[finished].waitTime = resultArray[finished].TAT - resultArray[finished].burstTime;
   resultArray[finished].finished = true;
   resultArray[finished].queued = true;
   processArray[location].finished = true;
@@ -202,6 +205,7 @@ void SJF(struct process *processArray, struct process *resultArray, int length){
       resultArray[finished].completionTime = resultArray[finished].startTime + resultArray[finished].burstTime;
       resultArray[finished].TAT = resultArray[finished].completionTime - resultArray[finished].arrivalTime;
       resultArray[finished].waitTime = resultArray[finished].TAT - resultArray[finished].burstTime;
+      resultArray[finished].responseTime = resultArray[finished].startTime - resultArray[finished].arrivalTime;
       totalTime = resultArray[finished].completionTime;
       finished++;
     }
@@ -301,6 +305,7 @@ void SRTF(struct process *processArray, struct process *resultArray, int length)
       resultArray[finished].TAT = resultArray[finished].completionTime - qArray[location].arrivalTime;
       resultArray[finished].waitTime = resultArray[finished].TAT - qArray[location].runTime;//runtime should == burst time.
       resultArray[finished].burstTime = qArray[location].runTime;
+      resultArray[finished].responseTime = resultArray[finished].startTime - resultArray[finished].arrivalTime;
       finished++;
       //printf("Amount finished = %d\n",finished);
 
@@ -478,6 +483,7 @@ int priority(struct process *processArray, struct process *resultArray, struct g
       resultArray[finished].completionTime = resultArray[finished].startTime + resultArray[finished].burstTime;
       resultArray[finished].TAT = resultArray[finished].completionTime - resultArray[finished].arrivalTime;
       resultArray[finished].waitTime = resultArray[finished].TAT - resultArray[finished].burstTime;
+      resultArray[finished].responseTime = resultArray[finished].startTime - resultArray[finished].arrivalTime;
       totalTime = resultArray[finished].completionTime;
       finished++;
       if(finished == length)
@@ -642,6 +648,7 @@ int RR(struct process *processArray, struct process *resultArray, struct gantt *
       resultArray[finished].completionTime = totalTime;
       resultArray[finished].TAT = resultArray[finished].completionTime - resultArray[finished].arrivalTime;
       resultArray[finished].waitTime = resultArray[finished].TAT - resultArray[finished].burstTime;
+      resultArray[finished].responseTime = resultArray[finished].startTime - resultArray[finished].arrivalTime;
       finished++;
       if(finished == length)
         gantArray[gantPos].leaveTime = totalTime;
@@ -712,7 +719,7 @@ void setprocess(struct process *input, int length, int maxRand){
   int i = 0;
   while(i < length){
     input[i].ID = i;
-    input[i].priority = (rand() % maxRand);
+    input[i].priority = (rand() % maxRand + 1);
     input[i].arrivalTime = (rand() % maxRand);
     input[i].burstTime = (rand() % maxRand + 1);
     input[i].runTime = input[i].burstTime;
@@ -768,11 +775,12 @@ void averages(struct process *processArray, int arrayLength, char processType[])
   printf("AVG turnaround time for %s = %f\n",processType, avgTAT);
   printf("AVG response time for %s = %f\n",processType, avgRT);
   printf("Throughput for %s = %f\n",processType,throughput);
+  return;
 }
 
 int main(){
   srand(time(0)); //seed with time for random results everytime
-  int maxRand = 20; // could get this from user input
+  int maxRand = 15; // could get this from user input
   int arrayLength; //needs to come from input
   int i = 0;
    float avgWait;
@@ -786,6 +794,9 @@ int main(){
   //////////////////////////////////*/
   printf("How many process would you like: ");
   scanf("%d", &arrayLength);
+  printf("Time range for arrival time: %d-%d\n",0, maxRand);
+  printf("Time range for burst time: %d-%d\n",0, maxRand + 1);
+  printf("Priority range is: %d-%d\n",0, maxRand + 1);
 
   /*///////////////////////////////////////////////////////////
   processArray holds all the base information about Process
@@ -819,7 +830,7 @@ int main(){
   FCFS(processArray, FCFSArray, arrayLength);
   printf("FCFS results\n");
   while(i < arrayLength){
-    printf("ID: %d st: %d priority: %d AT: %d BT: %d CT: %d TAT: %d\n", FCFSArray[i].ID, FCFSArray[i].startTime, FCFSArray[i].priority, FCFSArray[i].arrivalTime, FCFSArray[i].burstTime, FCFSArray[i].completionTime, FCFSArray[i].TAT);
+    printf("ID: %d st: %d priority: %d AT: %d BT: %d CT: %d TAT: %d WT:%d RT:%d\n", FCFSArray[i].ID, FCFSArray[i].startTime, FCFSArray[i].priority, FCFSArray[i].arrivalTime, FCFSArray[i].burstTime, FCFSArray[i].completionTime, FCFSArray[i].TAT, FCFSArray[i].waitTime, FCFSArray[i].responseTime);
     i++;
   }
   i = 0;
@@ -837,12 +848,27 @@ int main(){
   SJF(processArray, SJFArray, arrayLength);
   printf("\nSJF results\n");
   while(i < arrayLength){
-    printf("ID: %d st: %d priority: %d AT: %d BT: %d CT: %d TAT: %d WT: %d\n", SJFArray[i].ID, SJFArray[i].startTime, SJFArray[i].priority, SJFArray[i].arrivalTime, SJFArray[i].burstTime, SJFArray[i].completionTime, SJFArray[i].TAT, SJFArray[i].waitTime);
+    printf("ID: %d st: %d priority: %d AT: %d BT: %d CT: %d TAT: %d WT: %d RT:%d\n", SJFArray[i].ID, SJFArray[i].startTime, SJFArray[i].priority, SJFArray[i].arrivalTime, SJFArray[i].burstTime, SJFArray[i].completionTime, SJFArray[i].TAT, SJFArray[i].waitTime, SJFArray[i].responseTime);
     i++;
   }
   i = 0;
   averages(SJFArray,arrayLength,"SJF (Shortest Job First)");
   printf("Gant chart\n");
+  gant(SJFArray, arrayLength);
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Priority
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////
+  resetProcess(processArray, arrayLength);
+  priority(processArray, priorityArray, gantArray, arrayLength);
+  printf("\nPriority results\n");
+  while(i < arrayLength){
+    printf("ID: %d st: %d priority: %d AT: %d BT: %d CT: %d TAT: %d WT: %d RT:%d\n", priorityArray[i].ID, priorityArray[i].startTime, priorityArray[i].priority, priorityArray[i].arrivalTime, priorityArray[i].burstTime, priorityArray[i].completionTime, priorityArray[i].TAT, priorityArray[i].waitTime, priorityArray[i].responseTime);
+    i++;
+  }
+  i = 0;
+  averages(priorityArray,arrayLength,"Priority");
+  printf("Gant chart\n");
+  gant(priorityArray, arrayLength);
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////
   // SRTF
@@ -853,7 +879,7 @@ int main(){
   SRTF(processArray, SRTFArray, arrayLength);
   printf("\nSRTF results\n");
   while(i < arrayLength){
-    printf("ID: %d st: %d priority: %d AT: %d BT: %d CT: %d TAT: %d WT: %d\n", SRTFArray[i].ID, SRTFArray[i].startTime, SRTFArray[i].priority, SRTFArray[i].arrivalTime, SRTFArray[i].burstTime, SRTFArray[i].completionTime, SRTFArray[i].TAT, SRTFArray[i].waitTime);
+    printf("ID: %d st: %d priority: %d AT: %d BT: %d CT: %d TAT: %d WT: %d RT:%d\n", SRTFArray[i].ID, SRTFArray[i].startTime, SRTFArray[i].priority, SRTFArray[i].arrivalTime, SRTFArray[i].burstTime, SRTFArray[i].completionTime, SRTFArray[i].TAT, SRTFArray[i].waitTime, SRTFArray[i].responseTime);
     i++;
   }
 
@@ -862,12 +888,13 @@ int main(){
   // Round Robin
   /////////////////////////////////////////////////////////////////////////////////////////////////////////
   gantt *gantArray2 = malloc(10000 * sizeof(process)); //for preemptive
+  fflush(stdout);
   resetProcess(processArray, arrayLength);
   gantLength = RR(processArray, RRArray, gantArray2, arrayLength);
   printf("\nRoud Robin results\n");
   i = 0;
   while(i < arrayLength){
-    printf("ID: %d st: %d priority: %d AT: %d BT: %d CT: %d TAT: %d WT: %d\n", RRArray[i].ID, RRArray[i].startTime, RRArray[i].priority, RRArray[i].arrivalTime, RRArray[i].burstTime, RRArray[i].completionTime, RRArray[i].TAT, RRArray[i].waitTime);
+    printf("ID: %d st: %d priority: %d AT: %d BT: %d CT: %d TAT: %d WT: %d RT:%d\n", RRArray[i].ID, RRArray[i].startTime, RRArray[i].priority, RRArray[i].arrivalTime, RRArray[i].burstTime, RRArray[i].completionTime, RRArray[i].TAT, RRArray[i].waitTime, RRArray[i].responseTime);
     i++;
   }
   i = 0;
