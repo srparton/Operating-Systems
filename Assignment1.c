@@ -796,7 +796,7 @@ void averages(struct process *processArray, int arrayLength, char processType[])
 }
 
 int main(){
-  srand(1); //seed with time for random results everytime
+  srand(time(0)); //seed with time for random results everytime
   int maxRand = 20; // could get this from user input
   int arrayLength; //needs to come from input
   int i = 0;
