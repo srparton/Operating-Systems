@@ -488,11 +488,10 @@ int priority(struct process *processArray, struct process *resultArray, struct g
       qArray[location].finished = true;
       resultArray[finished] = qArray[location];
       resultArray[finished].startTime = qArray[location].startTime;
-      resultArray[finished].completionTime = resultArray[finished].startTime + resultArray[finished].burstTime;
+      resultArray[finished].completionTime = totalTime;
       resultArray[finished].TAT = resultArray[finished].completionTime - resultArray[finished].arrivalTime;
       resultArray[finished].waitTime = resultArray[finished].TAT - resultArray[finished].burstTime;
       resultArray[finished].responseTime = resultArray[finished].startTime - resultArray[finished].arrivalTime;
-      totalTime = resultArray[finished].completionTime;
       finished++;
       if(finished == length)
         gantArray[gantPos].leaveTime = totalTime;
@@ -865,7 +864,7 @@ int main(){
   SJF(processArray, SJFArray, arrayLength);
   printf("\nSJF results\n");
   while(i < arrayLength){
-    printf("ID: %d st: %d priority: %d AT: %d BT: %d CT: %d TAT: %d WT: %d RT:%d\n", SJFArray[i].ID, SJFArray[i].startTime, SJFArray[i].priority, SJFArray[i].arrivalTime, SJFArray[i].burstTime, SJFArray[i].completionTime, SJFArray[i].TAT, SJFArray[i].waitTime, SJFArray[i].responseTime);
+    printf("ID:%d st:%d priority:%d AT:%d BT:%d CT:%d TAT:%d WT:%d RT:%d\n", SJFArray[i].ID, SJFArray[i].startTime, SJFArray[i].priority, SJFArray[i].arrivalTime, SJFArray[i].burstTime, SJFArray[i].completionTime, SJFArray[i].TAT, SJFArray[i].waitTime, SJFArray[i].responseTime);
     i++;
   }
   i = 0;
@@ -879,7 +878,7 @@ int main(){
   priority(processArray, priorityArray, gantArray, arrayLength);
   printf("\nPriority results\n");
   while(i < arrayLength){
-    printf("ID: %d st: %d priority: %d AT: %d BT: %d CT: %d TAT: %d WT: %d RT:%d\n", priorityArray[i].ID, priorityArray[i].startTime, priorityArray[i].priority, priorityArray[i].arrivalTime, priorityArray[i].burstTime, priorityArray[i].completionTime, priorityArray[i].TAT, priorityArray[i].waitTime, priorityArray[i].responseTime);
+    printf("ID:%d st:%d priority:%d AT:%d BT:%d CT:%d TAT:%d WT:%d RT:%d\n", priorityArray[i].ID, priorityArray[i].startTime, priorityArray[i].priority, priorityArray[i].arrivalTime, priorityArray[i].burstTime, priorityArray[i].completionTime, priorityArray[i].TAT, priorityArray[i].waitTime, priorityArray[i].responseTime);
     i++;
   }
   i = 0;
@@ -896,7 +895,7 @@ int main(){
   SRTF(processArray, SRTFArray, arrayLength);
   printf("\nSRTF results\n");
   while(i < arrayLength){
-    printf("ID: %d st: %d priority: %d AT: %d BT: %d CT: %d TAT: %d WT: %d RT:%d\n", SRTFArray[i].ID, SRTFArray[i].startTime, SRTFArray[i].priority, SRTFArray[i].arrivalTime, SRTFArray[i].burstTime, SRTFArray[i].completionTime, SRTFArray[i].TAT, SRTFArray[i].waitTime, SRTFArray[i].responseTime);
+    printf("ID:%d st:%d priority:%d AT:%d BT:%d CT:%d TAT:%d WT:%d RT:%d\n", SRTFArray[i].ID, SRTFArray[i].startTime, SRTFArray[i].priority, SRTFArray[i].arrivalTime, SRTFArray[i].burstTime, SRTFArray[i].completionTime, SRTFArray[i].TAT, SRTFArray[i].waitTime, SRTFArray[i].responseTime);
     i++;
   }
 
@@ -908,10 +907,10 @@ int main(){
   fflush(stdout);
   resetProcess(processArray, arrayLength);
   gantLength = RR(processArray, RRArray, gantArray2, arrayLength);
-  printf("\nRoud Robin results\n");
+  printf("\nRoud Robin results (Time Quantum = 5)\n");
   i = 0;
   while(i < arrayLength){
-    printf("ID: %d st: %d priority: %d AT: %d BT: %d CT: %d TAT: %d WT: %d RT:%d\n", RRArray[i].ID, RRArray[i].startTime, RRArray[i].priority, RRArray[i].arrivalTime, RRArray[i].burstTime, RRArray[i].completionTime, RRArray[i].TAT, RRArray[i].waitTime, RRArray[i].responseTime);
+    printf("ID:%d st:%d priority:%d AT:%d BT:%d CT:%d TAT:%d WT:%d RT:%d\n", RRArray[i].ID, RRArray[i].startTime, RRArray[i].priority, RRArray[i].arrivalTime, RRArray[i].burstTime, RRArray[i].completionTime, RRArray[i].TAT, RRArray[i].waitTime, RRArray[i].responseTime);
     i++;
   }
   i = 0;
