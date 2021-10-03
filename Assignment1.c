@@ -235,12 +235,12 @@ void SJF(struct process *processArray, struct process *resultArray, int length){
   }
   free(qArray);
 }
-//********SRTF BEGINS HERE *******$$$$$$$$%%%%%%^^^^^^^
-void SRTF(struct process *processArray, struct process *resultArray, int length){
+int SRTF(struct process *processArray, struct process *resultArray, struct gantt *gantArray, int length){
   process *qArray = malloc(length * sizeof(process));
   int q = 0; //tracks the amont of process queued
   bool qFound = false;
-
+  int gantLength = 1;
+  int gantPos = 0;
   int finished = 0; //keeps track of the amount of process completed
   int lowestTime = ((unsigned int)~0 >> 1); //lowest burst time
   int location;
@@ -276,6 +276,8 @@ void SRTF(struct process *processArray, struct process *resultArray, int length)
   location = 0;
   int lowestProcess;
   qArray[location].startTime = qArray[location].arrivalTime;
+  gantArray[gantPos].enterTime = qArray[0].arrivalTime;
+  gantArray[gantPos].Process = qArray[0];
   x = 1; //keep track of queue arrivals.
   for (int time = qArray[0].arrivalTime; finished < length; time++){
     //handles case where there is a dead spot in processing. no jobs arrived yet and nothing to compute.
@@ -284,19 +286,24 @@ void SRTF(struct process *processArray, struct process *resultArray, int length)
       //check if new process has shorter busrt time.
       if(qArray[x].burstTime < qArray[location].burstTime){
         qArray[location].queued = true;
+        // qArray[location].burstTime -= 1;
+        gantArray[gantPos++].leaveTime = time;
         //assumed newly arrived queued value is already set to false
         location = x; //location == newly arrived process.
         qArray[location].startTime = time;
+        gantArray[gantPos].enterTime = time;
+        gantArray[gantPos].Process = qArray[location];
         //printf("New process is %d\n",qArray[location].ID);
       }
       // qArray[x].queued = true;
       if(x+1 < length)x++; //only increase x if there is more in the queue that need to arrive.
     }
-    // update burst time and run time now.
+    // update burst time
     qArray[location].burstTime -= 1;
     // qArray[location].runTime += 1;
-    if (qArray[location].burstTime == -1){
+    if (qArray[location].burstTime <= -1){
       //printf("Process %d has finished\n",qArray[location].ID);
+      gantArray[gantPos++].leaveTime = time;
       qArray[location].finished = true;
       qArray[location].completionTime = time;
       resultArray[finished] = qArray[location];
@@ -313,12 +320,17 @@ void SRTF(struct process *processArray, struct process *resultArray, int length)
       lowestTime = ((unsigned int)~0 >> 1);
       lowestProcess = 0;
       j = 0;
+      //if there is only one more process left then finish execution
       if(finished == length-1){
         while(qArray[j].finished){ //only looking for one process so increment till found.
           j++;
-          //if this works then end it here.
         }
+        //if last process arrival time is greater than time then advance time
+        if(time < qArray[j].arrivalTime) time = qArray[j].arrivalTime;
         //printf("last process to execute is %d\n",qArray[j].ID);
+        gantArray[gantPos].enterTime = time;
+        gantArray[gantPos].Process = qArray[j];
+        gantArray[gantPos].leaveTime = qArray[j].burstTime + time; 
         resultArray[finished] = qArray[j];
         resultArray[finished].startTime = time;
         resultArray[finished].completionTime = time + qArray[j].burstTime;
@@ -347,19 +359,26 @@ void SRTF(struct process *processArray, struct process *resultArray, int length)
           }
           location = lowestProcess;
           qArray[location].startTime = time;
+          gantArray[gantPos].enterTime = time;
+          gantArray[gantPos].Process = qArray[location];
           //printf("Next Process will be %d\n",qArray[location].ID);
         }
         //here
         else{ //nothing is arrived currently so fast forward time to arrival time - 1 (for loop will increment time once more)
           time = qArray[x].arrivalTime - 1;
           qArray[x].startTime = qArray[x].arrivalTime;
+          gantArray[gantPos].enterTime = qArray[x].arrivalTime;
+          gantArray[gantPos].Process = qArray[x];
           location = x;
+          x+=1;
           //printf("no current process found. Fastforwarding to locaiton %d\n",location);
         }
       }
     }
   }//end outer for loop
   free(qArray);
+  gantLength = gantPos+1;
+  return gantLength;
 }
 
 /*////////////////////////////////////////////////////////////
@@ -779,7 +798,8 @@ void averages(struct process *processArray, int arrayLength, char processType[])
 }
 
 int main(){
-  srand(time(0)); //seed with time for random results everytime
+  // srand(time(0)); //seed with time for random results everytime
+  srand(1); //seed with time for random results everytime
   int maxRand = 15; // could get this from user input
   int arrayLength; //needs to come from input
   int i = 0;
@@ -875,8 +895,9 @@ int main(){
   /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   int gantLength;
+  gantt *gantArray3 = malloc(10000 * sizeof(process)); //for preemptive
   resetProcess(processArray, arrayLength);
-  SRTF(processArray, SRTFArray, arrayLength);
+  gantLength = SRTF(processArray, SRTFArray, gantArray3, arrayLength);
   printf("\nSRTF results\n");
   while(i < arrayLength){
     printf("ID: %d st: %d priority: %d AT: %d BT: %d CT: %d TAT: %d WT: %d RT:%d\n", SRTFArray[i].ID, SRTFArray[i].startTime, SRTFArray[i].priority, SRTFArray[i].arrivalTime, SRTFArray[i].burstTime, SRTFArray[i].completionTime, SRTFArray[i].TAT, SRTFArray[i].waitTime, SRTFArray[i].responseTime);
@@ -884,6 +905,8 @@ int main(){
   }
 
   averages(SRTFArray,arrayLength,"SRTF (Shortest Run Time First)");
+  printf("Gant chart\n");
+  ganttNP(gantArray3, gantLength);
   /////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Round Robin
   /////////////////////////////////////////////////////////////////////////////////////////////////////////
